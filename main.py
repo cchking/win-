@@ -1,3 +1,4 @@
+import os
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 from tkinterdnd2 import DND_FILES, TkinterDnD
@@ -8,14 +9,17 @@ import tarfile
 import gzip
 import bz2
 import lzma
-import os
 import sys
 import traceback
 import logging
 import winreg
+import webbrowser
 
 # 设置日志
 logging.basicConfig(filename='unzip_tool.log', level=logging.DEBUG)
+
+# 获取脚本所在目录
+script_dir = os.path.dirname(os.path.abspath(__file__))
 
 class SettingsWindow:
     def __init__(self, master):
@@ -33,7 +37,7 @@ class SettingsWindow:
     def set_as_default(self):
         file_types = ['.zip', '.rar', '.7z', '.tar', '.tar.gz', '.tar.bz2', '.gz', '.bz2', '.xz']
         program_path = sys.argv[0]  # 使用当前脚本的路径
-        icon_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "icon.ico"))
+        icon_path = os.path.join(script_dir, "icon.ico")
 
         try:
             self._set_as_default_internal(file_types, program_path, icon_path)
@@ -103,9 +107,43 @@ class UnzipTool:
 
         self.file_path = None
 
+        # GitHub 图标路径
+        github_icon_path = os.path.join(script_dir, "github.png")
+        if os.path.exists(github_icon_path):
+            try:
+                self.github_icon = tk.PhotoImage(file=github_icon_path)
+                self.github_button = ttk.Button(
+                    master, 
+                    image=self.github_icon, 
+                    command=self.open_github_repo
+                )
+                self.github_button.pack(side=tk.TOP, anchor=tk.NE, padx=10, pady=5)
+            except tk.TclError as e:
+                logging.error(f"加载 GitHub 图标失败: {e}")
+                self.github_button = ttk.Button(
+                    master, 
+                    text="GitHub", 
+                    command=self.open_github_repo
+                )
+                self.github_button.pack(side=tk.TOP, anchor=tk.NE, padx=10, pady=5)
+        else:
+            self.github_button = ttk.Button(
+                master, 
+                text="GitHub", 
+                command=self.open_github_repo
+            )
+            self.github_button.pack(side=tk.TOP, anchor=tk.NE, padx=10, pady=5)
+
         # 设置拖放功能
-        self.master.drop_target_register(DND_FILES)
-        self.master.dnd_bind('<<Drop>>', self.handle_drop)
+        self.setup_drag_and_drop()
+
+    def setup_drag_and_drop(self):
+        try:
+            self.master.drop_target_register(DND_FILES)
+            self.master.dnd_bind('<<Drop>>', self.handle_drop)
+        except AttributeError:
+            logging.error("拖放功能未启用，因为 TkinterDnD 初始化失败。")
+            messagebox.showwarning("警告", "拖放功能不可用，因为初始化失败。")
 
     def open_settings(self):
         SettingsWindow(self.master)
@@ -233,14 +271,23 @@ class UnzipTool:
         self.progress_label.config(text=f"{progress:.1f}%")
         self.master.update_idletasks()
 
+    def open_github_repo(self):
+        webbrowser.open("https://github.com/cchking/win-/tree/f12ea80c5cee31a4173c023a65f62d407ca5897d")
+
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == '--set_default':
         SettingsWindow(None).set_as_default()
     else:
-        root = TkinterDnD.Tk()
+        try:
+            root = TkinterDnD.Tk()
+        except Exception as e:
+            print("Error initializing TkinterDnD:", str(e))
+            root = tk.Tk()  # 如果 TkinterDnD 失败，使用普通的 Tk
+        
         # 设置窗口图标
-        icon_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "icon.ico"))
+        icon_path = os.path.join(script_dir, "icon.ico")
         if os.path.exists(icon_path):
             root.iconbitmap(icon_path)
+        
         unzip_tool = UnzipTool(root)
         root.mainloop()
