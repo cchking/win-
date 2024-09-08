@@ -272,7 +272,7 @@ class UnzipTool:
         self.master.update_idletasks()
 
     def open_github_repo(self):
-        webbrowser.open("https://github.com/cchking/win-/tree/f12ea80c5cee31a4173c023a65f62d407ca5897d")
+        webbrowser.open("https://github.com/cchking/win-unzip-tool")
 
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == '--set_default':
