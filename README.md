@@ -49,7 +49,7 @@
 
 2. 执行以下命令以生成可执行程序：
     ```bash
-    pyinstaller --onefile --windowed --icon=icon.ico main.py
+    pyinstaller unzip_tool.spec
     ```
    
 3. 完成后，在生成目录 (`dist`) 中找到名为 `main.exe` 的可执行程序，即可双击运行而无需 Python 环境配置。
